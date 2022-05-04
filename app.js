@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const methodOverride = require('method-override');
 
 require('./config/database.js');
 
@@ -12,6 +13,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
 
 
 app.get('/', (req, res) => {
@@ -32,11 +34,22 @@ app.get('/campgrounds/:id', async (req, res) => {
   res.render('campgrounds/show', { campground });
 });
 
+app.get('/campgrounds/:id/edit', async(req, res) => {
+  const campground = await Campground.findById(req.params.id);
+  res.render('campgrounds/edit', { campground });
+});
+
 app.post('/campgrounds', async (req, res) => {
   const campground = new Campground(req.body);
   await campground.save();
   res.redirect(`campgrounds/${campground._id}`);
-})
+});
+
+app.put('/campgrounds/:id', async (req, res) => {
+  const { id } = req.params;
+  const campground = await Campground.findByIdAndUpdate(id, { ...req.body }, { new: true });
+  res.redirect(`/campgrounds/${campground._id}`);
+});
 
 app.listen(3000, () => {
   console.log('Serving on port 3000');
