@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const ejsMate = require('ejs-mate');
-const { campgroundSchema } = require('./schemas.js');
+const { campgroundSchema, reviewSchema } = require('./schemas.js');
 const catchAsync = require('./utilities/catchAsync');
 const ExpressError = require('./utilities/ExpressError');
 const methodOverride = require('method-override');
@@ -10,6 +10,7 @@ const methodOverride = require('method-override');
 require('./config/database.js');
 
 const Campground = require('./models/campground.js');
+const Review = require('./models/review.js');
 
 const app = express();
 
@@ -28,6 +29,15 @@ const validateCampground = (req, res, next) => {
   }
   next();
 };
+
+const validateReview = (req, res, next) => {
+  const { error } = reviewSchema.validate(req.body);
+  if(error) {
+    const msg = error.details.map(el => el.message).join(',');
+    throw new ExpressError(msg, 400);
+  }
+  next();
+}
 
 
 app.get('/', (req, res) => {
@@ -71,9 +81,18 @@ app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
   res.redirect('/campgrounds');
 }));
 
+app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async(req, res) => {
+  const campground = await Campground.findById(req.params.id);
+  const review = new Review(req.body.review);
+  campground.reviews.push(review);
+  await review.save();
+  await campground.save();
+  res.redirect(`/campgrounds/${campground._id}`);
+}));
+
 app.all('*', (req, res, next) => {
   next(new ExpressError('Page Not Found', 404));
-})
+});
 
 app.use((err, req, res, next) => {
   const { statusCode = 500 } = err;
