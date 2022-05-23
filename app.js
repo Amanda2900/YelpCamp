@@ -3,6 +3,7 @@ const express = require('express');
 const path = require('path');
 const ejsMate = require('ejs-mate');
 const session = require('express-session');
+const flash = require('connect-flash');
 const ExpressError = require('./utilities/ExpressError');
 const methodOverride = require('method-override');
 const campgrounds = require('./routes/campgrounds');
@@ -11,7 +12,7 @@ const reviews = require('./routes/reviews');
 //connect to mongoDB
 require('./config/database.js');
 
-
+//middleware
 const app = express();
 
 app.engine('ejs', ejsMate);
@@ -34,10 +35,17 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+});
+
+//route handlers
 app.use('/campgrounds', campgrounds);
 app.use('/campgrounds/:id/reviews', reviews);
 
-//routes
 app.get('/', (req, res) => {
   res.render('home')
 });
