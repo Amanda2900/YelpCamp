@@ -11,7 +11,6 @@ const reviews = require('./routes/reviews');
 require('./config/database.js');
 
 
-//middleware
 const app = express();
 
 app.engine('ejs', ejsMate);
@@ -20,8 +19,8 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-//use routes
 app.use('/campgrounds', campgrounds);
 app.use('/campgrounds/:id/reviews', reviews);
 
