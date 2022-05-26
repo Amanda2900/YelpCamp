@@ -37,6 +37,7 @@ module.exports.editForm = catchAsync(async(req, res) => {
 
 module.exports.create = catchAsync(async (req, res, next) => {
   const campground = new Campground(req.body);
+  campground.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
   campground.author = req.user._id;
   await campground.save();
   req.flash('success', 'Successfully added a new campground!');
