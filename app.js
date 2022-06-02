@@ -16,8 +16,8 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
 const mongoSanitize = require('express-mongo-sanitize');
+const MongoDBStore = require('connect-mongo');
 
-//connect to mongoDB
 require('./config/database.js');
 
 const app = express();
@@ -32,9 +32,15 @@ app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(mongoSanitize());
 
+
 const sessionConfig = {
+  store: MongoDBStore.create({ 
+    mongoUrl: process.env.DATABASE_URL,
+    secret: process.env.SECRET_KEY,
+    touchAfter: 24 * 60 * 60
+  }),
   name: 'session',
-  secret: 'thiswillbeabettersecret',
+  secret: process.env.SECRET_KEY,
   resave: false,
   saveUninitialized: true,
   cookie: {
